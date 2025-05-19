@@ -13,9 +13,9 @@ class DiaryRepository
      * @param int $count
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getIndexList(int $count): LengthAwarePaginator
+    public function getIndexList(int $userId, int $count): LengthAwarePaginator
     {
-        $diaries = Diary::orderBy('created_at', 'desc')->paginate($count);
+        $diaries = Diary::where('user_id',$userId)->orderBy('created_at', 'desc')->paginate($count);
         return $diaries;
     }
 }

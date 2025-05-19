@@ -27,7 +27,9 @@ class DiaryUseCase
      */
     public function index(): LengthAwarePaginator
     {
-        $diaries = $this->repository->getIndexList(config('diary.pagination_count'));
+        $userId = auth()->id();
+        $paginationCount = config('diary.pagination_count');
+        $diaries = $this->repository->getIndexList($userId, $paginationCount);
         return $diaries;
     }
 }

@@ -45,4 +45,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * The attributes that should be appended to the model's array form.
+     *
+     * @return list<string>
+     */
+    public function diaries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Diary::class);
+    }
 }

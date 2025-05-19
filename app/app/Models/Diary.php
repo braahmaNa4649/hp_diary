@@ -18,6 +18,7 @@ class Diary extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'content',
         'file_name',
         'deleted_at',
@@ -29,4 +30,14 @@ class Diary extends Model
      * @var list<string>
      */
     protected $hidden = [];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
