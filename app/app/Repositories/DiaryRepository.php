@@ -53,7 +53,6 @@ class DiaryRepository
         if (!Storage::disk('public')->exists($filePath)) {
             $filePath = '';
         }
-
         return $filePath;
     }
 
@@ -69,5 +68,25 @@ class DiaryRepository
             ->where('TABLE_NAME', 'diaries')
             ->where('COLUMN_NAME', 'content')
             ->value('CHARACTER_MAXIMUM_LENGTH');
+    }
+
+    /**
+     * 日記の最大画像サイズを設定から取得
+     *
+     * @return int
+     */
+    public function getMaxImageSize(): int
+    {
+        return config('diary.max_image_size');
+    }
+
+    /**
+     * 日記の画像タイプを設定から取得
+     *
+     * @return string
+     */
+    public function getImageType(): string
+    {
+        return config('diary.image_type');
     }
 }

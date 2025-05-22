@@ -26,7 +26,7 @@ class DiaryUseCase
      * @param int $count
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function index(): LengthAwarePaginator
+    public function getIndexParameters(): LengthAwarePaginator
     {
         $userId = auth()->id();
         $paginationCount = config('diary.pagination_count');
@@ -70,5 +70,54 @@ class DiaryUseCase
     public function getMaxContentLength(): int
     {
         return $this->repository->getMaxContentLength();
+    }
+
+    /**
+     * 日記の最大画像サイズを取得
+     *
+     * @return int
+     */
+    public function getMaxImageSize(): int
+    {
+        return $this->repository->getMaxImageSize();
+    }
+
+    /**
+     * 日記の画像タイプを取得
+     *
+     * @return string
+     */
+    public function getImageType(): string
+    {
+        return $this->repository->getImageType();
+    }
+
+    /**
+     * 日記のバリデーションルールを取得
+     *
+     * @return array
+     */
+    public function getCreateRules(): array
+    {
+        $maxImageSize = $this->getMaxImageSize() / 1024; // KBに変換
+        return [
+            'text' => 'required|string|max:' . $this->getMaxContentLength(),
+            'image' => 'nullable|image|mimes:' . $this->getImageType() . '|max:' . $maxImageSize
+        ];
+    }
+
+    /**
+     * 日記作成ページに渡すパラメータを取得
+     *
+     * @return array
+     */
+    public function getShowCreateParameters(): array
+    {
+        $maxTextLength = $this->getMaxContentLength();
+        $maxImageSize = $this->getMaxImageSize();
+        $uploadUrl = route('diary.create');
+        $listUrl = route('diary.index');
+        $imageType = $this->getImageType();
+        return  compact('maxTextLength', 'maxImageSize', 'uploadUrl', 'listUrl', 'imageType');
     }
 }
