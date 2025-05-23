@@ -206,4 +206,14 @@ class DiaryUseCase
     {
         return $this->repository->remove($diaryId);
     }
+
+    /**
+     * 日記の画像がない場合のファイル名を取得
+     *
+     * @return string
+     */
+    public function getNoImageName(): string
+    {
+        return $this->repository->getNoImageFileName();
+    }
 }

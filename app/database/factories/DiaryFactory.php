@@ -13,7 +13,7 @@ class DiaryFactory extends Factory
 {
     public function definition(): array
     {
-        $noImgName=app(DiaryUseCase::class)->getNoImgName();
+        $noImgName=app(DiaryUseCase::class)->getNoImageName();
         return [
             'user_id' => optional(User::inRandomOrder()->first())->id ?? User::factory(),
             'content' => $this->faker->realText(200),
