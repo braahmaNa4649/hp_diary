@@ -9,7 +9,7 @@
         data-mode={{ $mode }}
         @isset($diary)
             data-diary-id={{ $diary->id }} data-diary-image-url={{ asset('storage/images/' . $diary->file_name) }}
-            data-diary-text={{ $diary->content }}
+            data-diary-text="{{ $diary->content }}"
         @endisset>
     </div>
     @vite(['resources/js/diaries/save.js'])
