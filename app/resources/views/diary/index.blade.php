@@ -29,6 +29,17 @@
                                         class="bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-blue-600 transition">
                                         <i class="fa-solid fa-pen-to-square"></i> 編集
                                     </a>
+
+                                    <form action="{{ route('diary.remove', ['diary_id' => $diary->id]) }}"
+                                        method="POST" onsubmit="return confirm('削除しますか？');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="bg-red-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-red-600 transition">
+                                            <i class="fa-solid fa-trash-can"></i> 削除
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         @endforeach
                     @endif

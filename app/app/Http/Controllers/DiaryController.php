@@ -6,6 +6,7 @@ use Illuminate\View\View;
 use App\UseCases\DiaryUseCase;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class DiaryController extends Controller
@@ -115,5 +116,31 @@ class DiaryController extends Controller
             $message = '日記を編集しました';
         }
         return response()->json(['message' => $message], $responseCode);
+    }
+
+    /**
+     * 日記削除
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $diaryId
+     * @return \Illuminate\Http\redirectResponse
+     */
+    public function remove(Request $request, int $diaryId): RedirectResponse
+    {
+        $responseCode = 400;
+
+        $this->usecase->authorizeRemove($diaryId);
+
+        if ($this->usecase->remove($diaryId)) {
+            $responseCode = 200;
+            $key = 'success';
+            $message = '日記を削除しました';
+        } else {
+            $key = 'error';
+            $message = '日記の削除に失敗しました';
+        }
+        return redirect(route('diary.index'))
+            ->with($key, $message)
+            ->with('responseCode', $responseCode);
     }
 }

@@ -183,4 +183,27 @@ class DiaryUseCase
         $diary = $this->getById($diaryId);
         $this->authorize('update', $diary);
     }
+
+    /**
+     * 削除権限の確認
+     *
+     * @param int $diaryId
+     * @return void
+     */
+    public function authorizeRemove(int $diaryId): void
+    {
+        $diary = $this->getById($diaryId);
+        $this->authorize('delete', $diary);
+    }
+
+    /**
+     * 日記削除
+     *
+     * @param int $diaryId
+     * @return bool
+     */
+    public function remove(int $diaryId): bool
+    {
+        return $this->repository->remove($diaryId);
+    }
 }

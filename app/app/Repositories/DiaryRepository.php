@@ -124,4 +124,24 @@ class DiaryRepository
         ");
         return $default->COLUMN_DEFAULT;
     }
+
+    /**
+     * 日記データの削除フラグを立てる
+     *
+     * @param int $diaryId
+     * @return bool
+     */
+    public function remove(int $diaryId): bool
+    {
+        $diary = Diary::find($diaryId);
+        if (!$diary) {
+            return false;
+        }
+
+        // 画像ファイルを削除
+        if ($diary->file_name !== $this->getNoImageFileName()) {
+            Storage::disk('public')->delete('images/' . $diary->file_name);
+        }
+        return $diary->delete();
+    }
 }
