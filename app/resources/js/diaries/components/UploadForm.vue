@@ -14,37 +14,44 @@
 
         <form @submit.prevent="handleSubmit" enctype="multipart/form-data" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">一行日記（200文字まで、必須）</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    一行日記（半角400、全角200文字まで、必須）
+                </label>
                 <input type="text" ref="inputText" v-model="text" required :maxlength="maxTextLength"
-                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200">
-            </div>
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" />
 
-            <div class="border-2 border-dashed rounded p-6 text-center cursor-pointer transition bg-gray-50 hover:bg-gray-100"
-                :class="{ 'bg-blue-50 border-blue-300': isDragOver }" @dragover.prevent="isDragOver = true"
-                @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="triggerFileInput">
-                <p v-if="!image" class="text-gray-500">
-                    ここに画像をドラッグ＆ドロップ、またはクリックで選択（2MB以下、jpgのみ)</p>
-                <p v-else class="text-gray-700">選択された画像: {{ image.name }}</p>
-                <input type="file" ref="fileInput" @change="handleFileChange" accept="image/jpeg" hidden>
-            </div>
+                <div class="flex gap-4 mt-4">
+                    <div class="w-48 h-48 border-2 border-dashed rounded p-4 text-center cursor-pointer transition bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-sm"
+                        :class="{ 'bg-blue-50 border-blue-300': isDragOver }" @dragover.prevent="isDragOver = true"
+                        @dragleave.prevent="isDragOver = false" @drop.prevent="handleDrop" @click="triggerFileInput">
+                        <p v-if="!image" class="text-gray-500">
+                            画像をD&Dまたはクリック<br>（2MB以下、jpg）
+                        </p>
+                        <p v-else class="text-gray-700">
+                            {{ image.name }}
+                        </p>
+                        <input type="file" ref="fileInput" @change="handleFileChange" accept="image/jpeg" hidden />
+                    </div>
 
-            <div v-if="previewUrl" class="relative mt-2">
-                <img :src="previewUrl" alt="プレビュー" class="w-full max-h-64 object-contain rounded">
-                <button type="button" @click="clearImage"
-                    class="absolute top-2 right-2 bg-white border rounded-full p-1 shadow hover:bg-red-100">
-                    <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <div v-if="previewUrl" class="relative flex-1 aspect-square">
+                        <img :src="previewUrl" alt="プレビュー" class="w-full h-full object-contain rounded border" />
+                        <button type="button" @click="clearImage"
+                            class="absolute top-2 right-2 bg-white border rounded-full p-1 shadow hover:bg-red-100">
+                            <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="error" class="text-red-600 text-sm mt-2">{{ error }}</div>
+
+                <button type="submit" :disabled="loading"
+                    class="w-32 mx-auto block bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition mt-4">
+                    送信
                 </button>
             </div>
-
-            <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
-
-            <button type="submit" :disabled="loading"
-                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-                送信
-            </button>
         </form>
     </div>
 
@@ -75,6 +82,10 @@ export default {
             uploadUrl: '',
             listUrl: '',
             imageType: '',
+            mode: '',
+            diaryId: -1,
+            diaryImageUrl: '',
+            diaryText: '',
         }
     },
     mounted() {
@@ -84,6 +95,12 @@ export default {
         this.uploadUrl = uploadForm.dataset.uploadUrl;
         this.listUrl = uploadForm.dataset.listUrl;
         this.imageType = uploadForm.dataset.imageType;
+        this.mode = uploadForm.dataset.mode;
+        if (this.mode === 'edit') {
+            this.diaryId = Number(uploadForm.dataset.diaryId);
+            this.previewUrl = uploadForm.dataset.diaryImageUrl;
+            this.text = uploadForm.dataset.diaryText;
+        }
     },
     methods: {
         triggerFileInput() {
@@ -100,7 +117,6 @@ export default {
         clearImage() {
             this.image = null;
             this.previewUrl = '';
-            this.error = '';
             if (this.$refs.fileInput) this.$refs.fileInput.value = null;
         },
         validateImage(file) {
@@ -148,6 +164,12 @@ export default {
                 formData.append('image', this.image);
             }
 
+            if (this.mode === 'edit') {
+                formData.append('diary_id', this.diaryId);
+                const removeImage = this.previewUrl === '';
+                formData.append('remove_image', removeImage);
+            }
+
             this.loading = true;
             try {
                 await axios.post(this.uploadUrl, formData, {
@@ -157,8 +179,6 @@ export default {
                     }
                 });
                 this.showToast('アップロード成功', 'success');
-                this.text = '';
-                this.clearImage();
                 setTimeout(() => {
                     window.location.href = this.listUrl;
                 }, 1000);

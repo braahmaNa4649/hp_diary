@@ -8,7 +8,7 @@ export default defineConfig({
             input: [
                 "resources/css/app.css",
                 "resources/js/app.js",
-                "resources/js/diaries/create.js",
+                "resources/js/diaries/save.js",
             ],
             refresh: true,
         }),

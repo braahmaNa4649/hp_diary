@@ -40,7 +40,7 @@ class DiaryController extends Controller
     public function showCreate(): View
     {
         $params = $this->usecase->getShowCreateParameters();
-        return view('diary.create', $params);
+        return view('diary.save', $params);
     }
 
     /**
@@ -56,16 +56,63 @@ class DiaryController extends Controller
             return response()->json(['message' => '不正なリクエストです'], $responseCode);
         }
 
-        $createRules = $this->usecase->getCreateRules();
-        $request->validate($createRules);
+        $saveRules = $this->usecase->getSaveRules();
+        $request->validate($saveRules);
 
         $text = $request->input('text');
         $image = $request->file('image');
-        list($isSuccess, $message) = $this->usecase->create($text, $image);
+        list($isSuccess, $message) = $this->usecase->save($text, $image);
 
         if ($isSuccess) {
             $responseCode = 200;
             $message = '日記を作成しました';
+        }
+        return response()->json(['message' => $message], $responseCode);
+    }
+
+    /**
+     * 日記編集ページ表示
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $diaryId
+     * @return \Illuminate\View\View
+     */
+    public function showEdit(Request $request, int $diaryId): View
+    {
+        $this->usecase->authorizeShowEdit($diaryId);
+        $params = $this->usecase->getShowEditParameters($diaryId);
+        return view('diary.save', $params);
+    }
+
+    /**
+     * 日記編集
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function edit(Request $request): JsonResponse
+    {
+        $responseCode = 400;
+        if (!$request->ajax()) {
+            return response()->json(['message' => '不正なリクエストです'], $responseCode);
+        }
+
+        $diaryId = (int)$request->input('diary_id');
+        $text = $request->input('text');
+        $image = $request->file('image');
+        // true/falseが文字列として渡されるので、booleanに変換
+        $removeImage = filter_var($request->input('remove_image'), FILTER_VALIDATE_BOOLEAN);
+
+        $this->usecase->authorizeEdit($diaryId);
+
+        $saveRules = $this->usecase->getSaveRules();
+        $request->validate($saveRules);
+
+        list($isSuccess, $message) = $this->usecase->save($text, $image, $diaryId, $removeImage);
+
+        if ($isSuccess) {
+            $responseCode = 200;
+            $message = '日記を編集しました';
         }
         return response()->json(['message' => $message], $responseCode);
     }

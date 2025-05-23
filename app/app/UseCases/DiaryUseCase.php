@@ -2,12 +2,16 @@
 
 namespace App\UseCases;
 
+use App\Models\Diary;
 use App\Repositories\DiaryRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\UploadedFile;
 
 class DiaryUseCase
 {
+    use AuthorizesRequests;
+
     private $repository = null;
 
     /**
@@ -35,13 +39,13 @@ class DiaryUseCase
     }
 
     /**
-     * 日記作成
+     * 日記保存
      *
      * @param string $text
      * @param \Illuminate\Http\UploadedFile|null $image
      * @return array
      */
-    public function create(string $text, ?UploadedFile $image): array
+    public function save(string $text, ?UploadedFile $image, int $diaryId = -1, bool $removeImage = false): array
     {
         $isSuccess = false;
         $filePath = '';
@@ -49,17 +53,19 @@ class DiaryUseCase
         if ($image) {
             $filePath = $this->repository->storeImage($image);
             if (!$filePath) {
-                return [$isSuccess, 'ファイル保存に失敗しました。'];
+                return [$isSuccess, 'ファイル保存に失敗しました'];
             }
+        } elseif ($image === null && $removeImage) {
+            $filePath = $this->repository->getNoImageFileName();
         }
 
         $userId = auth()->id();
-        if (!$this->repository->create($userId, $text, pathinfo($filePath, PATHINFO_BASENAME))) {
-            return [$isSuccess, 'DB保存に失敗しました。'];
+        if (!$this->repository->save($userId, $text, pathinfo($filePath, PATHINFO_BASENAME), $diaryId)) {
+            return [$isSuccess, 'DB保存に失敗しました'];
         }
 
         $isSuccess = true;
-        return [$isSuccess, '日記を作成しました。'];
+        return [$isSuccess, '日記を作成しました'];
     }
 
     /**
@@ -93,11 +99,11 @@ class DiaryUseCase
     }
 
     /**
-     * 日記のバリデーションルールを取得
+     * 日記作成・編集時のバリデーションルールを取得
      *
      * @return array
      */
-    public function getCreateRules(): array
+    public function getSaveRules(): array
     {
         $maxImageSize = $this->getMaxImageSize() / 1024; // KBに変換
         return [
@@ -118,6 +124,63 @@ class DiaryUseCase
         $uploadUrl = route('diary.create');
         $listUrl = route('diary.index');
         $imageType = $this->getImageType();
-        return  compact('maxTextLength', 'maxImageSize', 'uploadUrl', 'listUrl', 'imageType');
+        $mode = 'create';
+        return  compact('maxTextLength', 'maxImageSize', 'uploadUrl', 'listUrl', 'imageType', 'mode');
+    }
+
+    /**
+     * 日記モデルをidにて取得
+     *
+     * @param int $diaryId
+     * @return app\Models\Diary
+     */
+    public function getById(int $diaryId): Diary
+    {
+        return $this->repository->getById($diaryId);
+    }
+
+    /**
+     * 日記編集ページに渡すパラメータを取得
+     *
+     * @return array
+     */
+    public function getShowEditParameters(int $diaryId): array
+    {
+        $maxTextLength = $this->getMaxContentLength();
+        $maxImageSize = $this->getMaxImageSize();
+        $uploadUrl = route('diary.edit');
+        $listUrl = route('diary.index');
+        $imageType = $this->getImageType();
+        $mode = 'edit';
+        $diary = $this->getById($diaryId);
+        return  compact('maxTextLength', 'maxImageSize', 'uploadUrl', 'listUrl', 'imageType', 'mode', 'diary');
+    }
+
+    /**
+     * 編集データ閲覧権限の確認
+     *
+     * @param int $diaryId
+     * @return void
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function authorizeShowEdit(int $diaryId): void
+    {
+        $diary = $this->getById($diaryId);
+        $this->authorize('view', $diary);
+    }
+
+    /**
+     * 編集権限の確認
+     *
+     * @param int $diaryId
+     * @return void
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function authorizeEdit(int $diaryId): void
+    {
+        $diary = $this->getById($diaryId);
+        $this->authorize('update', $diary);
     }
 }

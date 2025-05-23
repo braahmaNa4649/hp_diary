@@ -19,9 +19,16 @@
                             <div class="bg-white rounded-2xl shadow p-4 flex items-start space-x-4">
                                 <img src="{{ asset('storage/images/' . $diary->file_name) }}" alt="画像"
                                     class="max-w-12 max-h-12 object-cover rounded-md">
-                                <div class="text-gray-800 text-sm">
+
+                                <div class="text-gray-800 text-sm flex-1">
                                     {{ $diary->content }}
                                 </div>
+
+                                <div class="flex space-x-2 justify-end">
+                                    <a href="{{ route('diary.show_edit', ['diary_id' => $diary->id]) }}"
+                                        class="bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded hover:bg-blue-600 transition">
+                                        <i class="fa-solid fa-pen-to-square"></i> 編集
+                                    </a>
                             </div>
                         @endforeach
                     @endif

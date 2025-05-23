@@ -17,7 +17,7 @@ class DiaryRepository
      */
     public function getIndexList(int $userId, int $count): LengthAwarePaginator
     {
-        $diaries = Diary::where('user_id', $userId)->orderBy('created_at', 'desc')->paginate($count);
+        $diaries = Diary::where('user_id', $userId)->orderBy('updated_at', 'desc')->paginate($count);
         return $diaries;
     }
 
@@ -29,14 +29,20 @@ class DiaryRepository
      * @param string|null $fileName
      * @return bool
      */
-    public function create(int $userId, string $content, ?string $fileName): bool
+    public function save(int $userId, string $content, string $fileName, int $diaryId = -1): bool
     {
-        $diary = new Diary();
+        if ($diaryId > 0) {
+            $diary = Diary::find($diaryId);
+        } else {
+            $diary = new Diary();
+        }
+
         $diary->user_id = $userId;
         $diary->content = $content;
         if ($fileName) {
             $diary->file_name = $fileName;
         }
+
         return $diary->save();
     }
 
@@ -88,5 +94,34 @@ class DiaryRepository
     public function getImageType(): string
     {
         return config('diary.image_type');
+    }
+
+    /**
+     * idから日記モデルを取得
+     *
+     * @param int $diaryId
+     * @return \App\Models\Diary
+     */
+    public function getById(int $diaryId): Diary
+    {
+        // 見つからない場合は404エラーを返す
+        return Diary::findOrFail($diaryId);
+    }
+
+    /**
+     * 日記の画像がない場合のファイル名をDBから取得
+     *
+     * @return string
+     */
+    public function getNoImageFileName(): string
+    {
+        $default = DB::selectOne("
+            SELECT COLUMN_DEFAULT
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'diaries'
+                AND COLUMN_NAME = 'file_name'
+                AND TABLE_SCHEMA = DATABASE()
+        ");
+        return $default->COLUMN_DEFAULT;
     }
 }
