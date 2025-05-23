@@ -1,0 +1,5 @@
+.env
+/web/www/**
+!**/.gitkeep
+!/web/www/
+!/web/www/**/

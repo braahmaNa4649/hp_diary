@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\UseCases\DiaryUseCase;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -12,13 +13,11 @@ class DiaryFactory extends Factory
 {
     public function definition(): array
     {
+        $noImgName=app(DiaryUseCase::class)->getNoImgName();
         return [
             'user_id' => optional(User::inRandomOrder()->first())->id ?? User::factory(),
             'content' => $this->faker->realText(200),
-            'file_name' => $this->faker->randomElement([
-                $this->faker->unique()->lexify('????.jpg'),
-                'noimage.jpg',
-            ]),
+            'file_name' => $noImgName,
             'created_at' => now(),
             'updated_at' => now(),
         ];

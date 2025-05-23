@@ -1,0 +1,43 @@
+services:
+  hp_web:
+    image: braahmana/hp_web
+    build:
+      context: ./web
+    ports:
+      - '80:80'
+    volumes:
+      - ${PHP_SOCKET}:/var/run/app_sockets
+      - ${APP_SOURCE}:/var/www/app
+    networks:
+      - hp_network
+
+  hp_db:
+    image: braahmana/hp_db
+    build:
+      context: ./db
+    env_file:
+      - ./db/.env
+    volumes:
+      - hp_db_data:/var/lib/mysql
+    networks:
+      - hp_network
+
+  hp_app:
+    build:
+      context: ./app
+    image: braahmana/hp_app
+    volumes:
+      - ${PHP_SOCKET}:/var/run/php-fpm
+      - ${APP_SOURCE}:/var/www/app
+    extra_hosts:
+      - 'host.docker.internal:host-gateway' # linux用
+    networks:
+      - hp_network
+
+networks:
+  hp_network:
+    driver: bridge
+
+volumes:
+  hp_db_data:
+    driver: local
