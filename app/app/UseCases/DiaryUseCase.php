@@ -57,6 +57,8 @@ class DiaryUseCase
             }
         } elseif ($image === null && $removeImage) {
             $filePath = $this->repository->getNoImageFileName();
+            $fileName = $this->repository->getImageFileName($diaryId);
+            $this->repository->removeImage($fileName);
         }
 
         $userId = auth()->id();

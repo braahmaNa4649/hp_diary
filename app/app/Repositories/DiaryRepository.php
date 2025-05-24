@@ -138,10 +138,49 @@ class DiaryRepository
             return false;
         }
 
-        // 画像ファイルを削除
-        if ($diary->file_name !== $this->getNoImageFileName()) {
-            Storage::disk('public')->delete('images/' . $diary->file_name);
-        }
+        $isRemoved = $this->removeImage($diary->file_name);
         return $diary->delete();
+    }
+
+    /**
+     * 画像ファイルを削除
+     *
+     * @param string $imageFileName
+     * @return bool
+     */
+    public function removeImage(string $imageFileName): bool
+    {
+        $isSuccess = true;
+        if ($imageFileName !== $this->getNoImageFileName()) {
+            $isSuccess = $this->getPublicDisk()->delete('images/' . $imageFileName);
+        }
+        return $isSuccess;
+    }
+
+    /**
+     * 日記の画像ファイル名を取得
+     *
+     * @param int $diaryId
+     * @return string
+     */
+    public function getImageFileName(int $diaryId): string
+    {
+        $diary = Diary::find($diaryId);
+        if ($diary) {
+            $fileName = $diary->file_name;
+        } else {
+            $fileName = '';
+        }
+        return $fileName;
+    }
+
+    /**
+     * 公開ディスクを取得
+     *
+     * @return \Illuminate\Filesystem\FilesystemAdapter
+     */
+    private function getPublicDisk(): FilesystemAdapter
+    {
+        return Storage::disk('public');
     }
 }
