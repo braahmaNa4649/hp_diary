@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Diary;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ class DiaryRepository
         if ($diaryId > 0) {
             $diary = Diary::find($diaryId);
         } else {
-            $diary = new Diary();
+            $diary = app(Diary::class);
         }
 
         $diary->user_id = $userId;
@@ -54,12 +55,12 @@ class DiaryRepository
      */
     public function storeImage($image): string
     {
-        $filename = $image->hashName();
-        $filePath = $image->storeAs('images', $filename, 'public');
-        if (!Storage::disk('public')->exists($filePath)) {
+        $fileName = $image->hashName();
+        $filePath = $image->storeAs('images', $fileName, 'public');
+        if (!$this->getPublicDisk()->exists($filePath)) {
             $filePath = '';
         }
-        return $filePath;
+        return $fileName;
     }
 
     /**

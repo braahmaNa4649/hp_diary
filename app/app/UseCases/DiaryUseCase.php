@@ -48,21 +48,21 @@ class DiaryUseCase
     public function save(string $text, ?UploadedFile $image, int $diaryId = -1, bool $removeImage = false): array
     {
         $isSuccess = false;
-        $filePath = '';
+        $fileName = '';
 
         if ($image) {
-            $filePath = $this->repository->storeImage($image);
-            if (!$filePath) {
+            $fileName = $this->repository->storeImage($image);
+            if (!$fileName) {
                 return [$isSuccess, 'ファイル保存に失敗しました'];
             }
-        } elseif ($image === null && $removeImage) {
-            $filePath = $this->repository->getNoImageFileName();
+        } elseif ($image === null && $removeImage) { # 編集で画像を削除する場合
             $fileName = $this->repository->getImageFileName($diaryId);
             $this->repository->removeImage($fileName);
+            $fileName = $this->repository->getNoImageFileName();
         }
 
         $userId = auth()->id();
-        if (!$this->repository->save($userId, $text, pathinfo($filePath, PATHINFO_BASENAME), $diaryId)) {
+        if (!$this->repository->save($userId, $text, $fileName, $diaryId)) {
             return [$isSuccess, 'DB保存に失敗しました'];
         }
 
